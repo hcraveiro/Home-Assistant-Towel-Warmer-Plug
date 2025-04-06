@@ -1,0 +1,32 @@
+{
+  "title": "Towel Warmer Plug",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure a towel warmer",
+        "description": "Set up the plug and power sensor",
+        "data": {
+          "name": "Name",
+          "switch_entity": "Plug Switch",
+          "power_sensor": "Power Sensor",
+          "minimum_power": "Minimum Power (W)", 
+          "start_time": "Start Time",
+          "end_time": "End Time"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Towel Warmer Options",
+        "data": {
+          "minimum_power": "Minimum Power (W)",
+          "start_time": "Start Time",
+          "end_time": "End Time"
+        }
+      }
+    }
+  }
+}
+
