@@ -9,9 +9,10 @@
           "name": "Name",
           "switch_entity": "Plug Switch",
           "power_sensor": "Power Sensor",
-          "minimum_power": "Minimum Power (W)", 
+          "minimum_power": "Minimum Power (W)",
           "start_time": "Start Time",
-          "end_time": "End Time"
+          "end_time": "End Time",
+          "manual_max_duration": "Max Duration in Manual Mode (min)"
         }
       }
     }
@@ -23,7 +24,8 @@
         "data": {
           "minimum_power": "Minimum Power (W)",
           "start_time": "Start Time",
-          "end_time": "End Time"
+          "end_time": "End Time",
+          "manual_max_duration": "Max Duration in Manual Mode (min)"
         }
       }
     }

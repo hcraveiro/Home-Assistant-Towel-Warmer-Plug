@@ -9,8 +9,11 @@ from .const import (
     CONF_START_TIME,
     CONF_END_TIME,
     CONF_MINIMUM_POWER,
-    DEFAULT_MINIMUM_POWER
+    DEFAULT_MINIMUM_POWER,
 )
+
+CONF_MANUAL_MAX_DURATION = "manual_max_duration"
+DEFAULT_MANUAL_MAX_DURATION = 60  # minutos
 
 @dataclass
 class TowelWarmerConfig:
@@ -20,6 +23,7 @@ class TowelWarmerConfig:
     minimum_power: float
     start_time: time
     end_time: time
+    manual_max_duration: int  # em minutos
 
     @staticmethod
     def from_dict(data: dict[str, Any]) -> "TowelWarmerConfig":
@@ -30,5 +34,6 @@ class TowelWarmerConfig:
             minimum_power=data.get(CONF_MINIMUM_POWER, DEFAULT_MINIMUM_POWER),
             start_time=data[CONF_START_TIME],
             end_time=data[CONF_END_TIME],
-        ) 
+            manual_max_duration=data.get(CONF_MANUAL_MAX_DURATION, DEFAULT_MANUAL_MAX_DURATION),
+        )
 
