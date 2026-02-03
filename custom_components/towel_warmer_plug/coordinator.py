@@ -8,7 +8,7 @@ import logging
 
 from .const import *
 from .models import TowelWarmerConfig
-from .utils import slugify
+from .utils import slugify, _safe_parse_dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -152,23 +152,37 @@ class TowelWarmerCoordinator(DataUpdateCoordinator):
 
     async def load_persistent_data(self):
         data = await self.storage.async_load()
-        if data:
-            if "last_auto_on" in data:
-                self._last_auto_on = datetime.fromisoformat(data["last_auto_on"])
-            if "power_low_since" in data:
-                self._power_low_since = datetime.fromisoformat(data["power_low_since"])
-            self._manual_override = data.get("manual_override", False)
-            since = data.get("manual_override_since")
-            if since:
-                self._manual_override_since = datetime.fromisoformat(since)
-            self._last_switch_state = data.get("last_switch_state", None)
+        if not data:
+            _LOGGER.debug("%s - No persistent data found; starting fresh.", self.config.name)
+            return
+
+        self._last_auto_on = _safe_parse_dt(data.get("last_auto_on"))
+        self._power_low_since = _safe_parse_dt(data.get("power_low_since"))
+        self._manual_override = bool(data.get("manual_override", False))
+        self._manual_override_since = _safe_parse_dt(data.get("manual_override_since"))
+        self._last_switch_state = data.get("last_switch_state", None)
+
+        _LOGGER.debug(
+            "%s - Loaded persistent: last_auto_on=%s, power_low_since=%s, "
+            "manual_override=%s, manual_override_since=%s, last_switch_state=%s",
+            self.config.name,
+            self._last_auto_on,
+            self._power_low_since,
+            self._manual_override,
+            self._manual_override_since,
+            self._last_switch_state,
+        )
 
     async def save_persistent_data(self):
-        await self.storage.async_save({
-            "last_auto_on": self._last_auto_on.isoformat() if self._last_auto_on else None,
-            "power_low_since": self._power_low_since.isoformat() if self._power_low_since else None,
-            "manual_override": self._manual_override,
-            "manual_override_since": self._manual_override_since.isoformat() if self._manual_override_since else None,
-            "last_switch_state": self._last_switch_state,
-        })
+        try:
+            await self.storage.async_save({
+                "last_auto_on": self._last_auto_on.isoformat() if self._last_auto_on else None,
+                "power_low_since": self._power_low_since.isoformat() if self._power_low_since else None,
+                "manual_override": self._manual_override,
+                "manual_override_since": self._manual_override_since.isoformat() if self._manual_override_since else None,
+                "last_switch_state": self._last_switch_state,
+                "is_full_latched": getattr(self, "_is_full_latched", None),  # só no dehumidifier_plug
+            })
+        except Exception as err:
+            _LOGGER.warning("%s - Failed to save persistent data: %s", self.config.name, err)
 
