@@ -8,7 +8,7 @@ from .const import (
     CONF_START_TIME, CONF_END_TIME,
     DEFAULT_START_TIME, DEFAULT_END_TIME,
     CONF_MINIMUM_POWER, DEFAULT_MINIMUM_POWER,
-    CONF_WEEKDAYS, DEFAULT_WEEKDAYS,
+    CONF_WEEKDAYS, DEFAULT_WEEKDAYS, CONF_TIME_WINDOWS,
     CONF_START_TIME_2, CONF_END_TIME_2, CONF_START_TIME_3, CONF_END_TIME_3,
 )
 
@@ -23,29 +23,39 @@ WEEKDAY_SELECTOR = selector.SelectSelector(selector.SelectSelectorConfig(
 ))
 
 
+TIME_WINDOWS_SELECTOR = selector.ObjectSelector(selector.ObjectSelectorConfig(
+    multiple=True,
+    label_field="start",
+    description_field="end",
+    fields={
+        "start": {"label": "Start time", "selector": selector.TimeSelector(), "required": True},
+        "end": {"label": "End time", "selector": selector.TimeSelector(), "required": True},
+    },
+))
+
+
 def schedule_fields(values):
-    """Build schedule fields shared by setup and options flows."""
-    fields = {
+    """Return the weekday picker and dynamic schedule editor."""
+    windows = values.get(CONF_TIME_WINDOWS)
+    if windows is None:
+        windows = [{
+            "start": values.get(CONF_START_TIME, DEFAULT_START_TIME),
+            "end": values.get(CONF_END_TIME, DEFAULT_END_TIME),
+        }]
+    return {
         vol.Required(CONF_WEEKDAYS, default=values.get(CONF_WEEKDAYS, DEFAULT_WEEKDAYS)): WEEKDAY_SELECTOR,
+        vol.Required(CONF_TIME_WINDOWS, default=windows): TIME_WINDOWS_SELECTOR,
     }
-    for start_key, end_key in (
-        (CONF_START_TIME_2, CONF_END_TIME_2),
-        (CONF_START_TIME_3, CONF_END_TIME_3),
-    ):
-        for key in (start_key, end_key):
-            if key in values and values[key]:
-                fields[vol.Optional(key, default=values[key])] = selector.TimeSelector()
-            else:
-                fields[vol.Optional(key)] = selector.TimeSelector()
-    return fields
 
 
 def valid_schedule(data):
-    """Optional windows must be specified as complete pairs."""
-    return all(bool(data.get(start)) == bool(data.get(end)) for start, end in (
-        (CONF_START_TIME_2, CONF_END_TIME_2),
-        (CONF_START_TIME_3, CONF_END_TIME_3),
-    ))
+    """At least one complete interval is required."""
+    windows = data.get(CONF_TIME_WINDOWS, [])
+    return bool(windows) and all(
+        isinstance(window, dict) and bool(window.get("start")) and bool(window.get("end"))
+        for window in windows
+    )
+
 
 class TowelWarmerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
@@ -76,8 +86,6 @@ class TowelWarmerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_MINIMUM_POWER, default=DEFAULT_MINIMUM_POWER): selector.NumberSelector(
                     selector.NumberSelectorConfig(min=0, max=500, step=0.1, unit_of_measurement="W", mode=selector.NumberSelectorMode.BOX)
                 ),
-                vol.Optional(CONF_START_TIME, default=DEFAULT_START_TIME): selector.TimeSelector(),
-                vol.Optional(CONF_END_TIME, default=DEFAULT_END_TIME): selector.TimeSelector(),
                 vol.Optional(CONF_MANUAL_MAX_DURATION, default=DEFAULT_MANUAL_MAX_DURATION): selector.NumberSelector(
                     selector.NumberSelectorConfig(min=1, max=360, step=1, unit_of_measurement="min", mode=selector.NumberSelectorMode.BOX)
                 ),
@@ -107,14 +115,6 @@ class TowelWarmerOptionsFlowHandler(config_entries.OptionsFlow):
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(min=0, max=500, step=0.1, unit_of_measurement="W", mode=selector.NumberSelectorMode.BOX)
                 ),
-                vol.Optional(
-                    CONF_START_TIME,
-                    default=options.get(CONF_START_TIME, data_fallback.get(CONF_START_TIME, DEFAULT_START_TIME))
-                ): selector.TimeSelector(),
-                vol.Optional(
-                    CONF_END_TIME,
-                    default=options.get(CONF_END_TIME, data_fallback.get(CONF_END_TIME, DEFAULT_END_TIME))
-                ): selector.TimeSelector(),
                 vol.Optional(
                     CONF_MANUAL_MAX_DURATION,
                     default=options.get(CONF_MANUAL_MAX_DURATION, data_fallback.get(CONF_MANUAL_MAX_DURATION, DEFAULT_MANUAL_MAX_DURATION))
