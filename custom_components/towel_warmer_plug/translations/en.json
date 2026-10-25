@@ -12,9 +12,20 @@
           "minimum_power": "Minimum Power (W)",
           "start_time": "Start Time",
           "end_time": "End Time",
-          "manual_max_duration": "Max Duration in Manual Mode (min)"
+          "manual_max_duration": "Max Duration in Manual Mode (min)",
+          "weekdays": "Days of the week",
+          "start_time_2": "Second start time (optional)",
+          "end_time_2": "Second end time (optional)",
+          "start_time_3": "Third start time (optional)",
+          "end_time_3": "Third end time (optional)"
+        },
+        "data_description": {
+          "weekdays": "Choose the days when automatic heating is allowed. Optional time windows require both start and end."
         }
       }
+    },
+    "errors": {
+      "invalid_schedule": "Each additional time window must have both a start and an end time."
     }
   },
   "options": {
@@ -25,10 +36,20 @@
           "minimum_power": "Minimum Power (W)",
           "start_time": "Start Time",
           "end_time": "End Time",
-          "manual_max_duration": "Max Duration in Manual Mode (min)"
+          "manual_max_duration": "Max Duration in Manual Mode (min)",
+          "weekdays": "Days of the week",
+          "start_time_2": "Second start time (optional)",
+          "end_time_2": "Second end time (optional)",
+          "start_time_3": "Third start time (optional)",
+          "end_time_3": "Third end time (optional)"
+        },
+        "data_description": {
+          "weekdays": "Choose the days when automatic heating is allowed. Optional time windows require both start and end."
         }
       }
+    },
+    "errors": {
+      "invalid_schedule": "Each additional time window must have both a start and an end time."
     }
   }
 }
-
