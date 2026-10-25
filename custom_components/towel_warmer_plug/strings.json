@@ -10,11 +10,18 @@
           "switch_entity": "Plug Switch",
           "power_sensor": "Power Sensor",
           "minimum_power": "Minimum Power (W)",
-          "start_time": "Start Time",
-          "end_time": "End Time",
-          "manual_max_duration": "Max Duration in Manual Mode (min)"
+          "manual_max_duration": "Max Duration in Manual Mode (min)",
+          "weekdays": "Days of the week",
+          "time_windows": "Heating intervals"
+        },
+        "data_description": {
+          "weekdays": "Choose the days when automatic heating is allowed. Optional time windows require both start and end.",
+          "time_windows": "Add or remove any number of start/end time intervals."
         }
       }
+    },
+    "errors": {
+      "invalid_schedule": "Each additional time window must have both a start and an end time."
     }
   },
   "options": {
@@ -23,12 +30,18 @@
         "title": "Towel Warmer Options",
         "data": {
           "minimum_power": "Minimum Power (W)",
-          "start_time": "Start Time",
-          "end_time": "End Time",
-          "manual_max_duration": "Max Duration in Manual Mode (min)"
+          "manual_max_duration": "Max Duration in Manual Mode (min)",
+          "weekdays": "Days of the week",
+          "time_windows": "Heating intervals"
+        },
+        "data_description": {
+          "weekdays": "Choose the days when automatic heating is allowed. Optional time windows require both start and end.",
+          "time_windows": "Add or remove any number of start/end time intervals."
         }
       }
+    },
+    "errors": {
+      "invalid_schedule": "Each additional time window must have both a start and an end time."
     }
   }
 }
-

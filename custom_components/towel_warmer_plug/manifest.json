@@ -1,8 +1,8 @@
 {
   "domain": "towel_warmer_plug",
   "name": "Towel Warmer Plug",
-  "version": "1.0.3",
-  "documentation": "",
+  "version": "1.1.0",
+  "documentation": "https://github.com/hcraveiro/Home-Assistant-Towel-Warmer-Plug",
   "dependencies": [],
   "codeowners": [],
   "requirements": [],

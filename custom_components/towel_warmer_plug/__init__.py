@@ -1,4 +1,4 @@
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.const import Platform
@@ -10,7 +10,7 @@ from .const import (
     CONF_NAME
 )
 from .coordinator import TowelWarmerCoordinator
-from .models import TowelWarmerConfig
+from .models import TowelWarmerConfig, merge_entry_settings
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
 
@@ -18,11 +18,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    data = {
-        **entry.data,
-        **entry.options,
-        CONF_NAME: entry.title,  # garante que temos o título como nome interno
-    }
+    # Register the options listener before validation or the first refresh.
+    # A failed setup must still recover when the user fixes the options.
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+    # Legacy options may contain null entity references. Do not overwrite
+    # valid setup values with null when loading an existing entry.
+    data = {**merge_entry_settings(entry.data, entry.options), CONF_NAME: entry.title}
+
+    if not data.get(CONF_POWER):
+        raise ConfigEntryError(
+            "Power sensor is not configured. Open Configure and select a Power Sensor."
+        )
 
     config = TowelWarmerConfig.from_dict(data)
     coordinator = TowelWarmerCoordinator(hass, config)
@@ -33,9 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
     }
-
-    # Garante que alterações às opções forçam reload
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

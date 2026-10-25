@@ -1,0 +1,27 @@
+name: Tests and coverage
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Unit tests and coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install test dependencies
+        run: python -m pip install --upgrade coverage
+      - name: Run tests with coverage threshold
+        run: |
+          coverage run --branch --include='*/towel_warmer_plug/schedule.py,*/towel_warmer_plug/models.py' -m unittest discover -s tests -p 'test_*.py' -v
+          coverage report -m --fail-under=85
+      - name: Check Python syntax
+        run: python -m compileall -q custom_components/towel_warmer_plug tests

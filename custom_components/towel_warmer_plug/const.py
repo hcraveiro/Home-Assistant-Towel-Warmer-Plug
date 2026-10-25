@@ -14,3 +14,11 @@ DEFAULT_MINIMUM_POWER = 10.0
 
 CONF_MANUAL_MAX_DURATION = "manual_max_duration"
 DEFAULT_MANUAL_MAX_DURATION = 60  # minutes 
+CONF_WEEKDAYS = "weekdays"
+DEFAULT_WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+CONF_START_TIME_2 = "start_time_2"
+CONF_END_TIME_2 = "end_time_2"
+CONF_START_TIME_3 = "start_time_3"
+CONF_END_TIME_3 = "end_time_3"
+
+CONF_TIME_WINDOWS = "time_windows"

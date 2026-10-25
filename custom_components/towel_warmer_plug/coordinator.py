@@ -9,6 +9,7 @@ import logging
 from .const import *
 from .models import TowelWarmerConfig
 from .utils import slugify, _safe_parse_dt
+from .schedule import is_in_schedule
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,20 +53,9 @@ class TowelWarmerCoordinator(DataUpdateCoordinator):
             is_on = state_switch.state == "on"
             power = float(state_power.state)
 
-            now_local = dt_util.now()
-            now = now_local.time()
-
-            if isinstance(self.config.start_time, str):
-                start = datetime.strptime(self.config.start_time, "%H:%M:%S").time()
-            else:
-                start = self.config.start_time
-
-            if isinstance(self.config.end_time, str):
-                end = datetime.strptime(self.config.end_time, "%H:%M:%S").time()
-            else:
-                end = self.config.end_time
-
-            inside_schedule = start <= now <= end if start < end else now >= start or now <= end
+            inside_schedule = is_in_schedule(
+                dt_util.now(), self.config.weekdays, self.config.time_windows
+            )
 
             # Detect manual override via switch state change
             previous_state = self._last_switch_state
