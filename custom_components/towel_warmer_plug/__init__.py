@@ -1,4 +1,4 @@
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.const import Platform
@@ -21,6 +21,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Legacy options may contain null entity references. Do not overwrite
     # valid setup values with null when loading an existing entry.
     data = {**merge_entry_settings(entry.data, entry.options), CONF_NAME: entry.title}
+
+    if not data.get(CONF_POWER):
+        raise ConfigEntryError(
+            "Power sensor is not configured. Open Configure and select a Power Sensor."
+        )
 
     config = TowelWarmerConfig.from_dict(data)
     coordinator = TowelWarmerCoordinator(hass, config)
