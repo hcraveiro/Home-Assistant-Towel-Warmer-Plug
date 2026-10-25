@@ -14,6 +14,7 @@ module = module_from_spec(spec)
 sys.modules[spec.name] = module
 spec.loader.exec_module(module)
 TowelWarmerConfig = module.TowelWarmerConfig
+merge_entry_settings = module.merge_entry_settings
 
 
 class MigrationTests(unittest.TestCase):
@@ -30,6 +31,17 @@ class MigrationTests(unittest.TestCase):
         config = TowelWarmerConfig.from_dict(self.old_data)
         self.assertEqual(config.time_windows, [("07:30:00", "09:15:00")])
         self.assertEqual(config.weekdays, ["mon", "tue", "wed", "thu", "fri", "sat", "sun"])
+
+    def test_null_legacy_power_sensor_does_not_override_original(self):
+        original = {**self.old_data, "power_sensor": "sensor.warmer_power"}
+        options = {"power_sensor": None, "start_time": "11:00:00", "end_time": "12:00:00"}
+        merged = merge_entry_settings(original, options)
+        self.assertEqual(merged["power_sensor"], "sensor.warmer_power")
+        self.assertEqual(TowelWarmerConfig.from_dict(merged).time_windows, [("11:00:00", "12:00:00")])
+
+    def test_valid_options_take_precedence(self):
+        merged = merge_entry_settings(self.old_data, {"power_sensor": "sensor.new_power"})
+        self.assertEqual(merged["power_sensor"], "sensor.new_power")
 
     def test_old_options_override_old_data(self):
         options = {"start_time": "06:00:00", "end_time": "08:00:00"}
