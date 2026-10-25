@@ -1,6 +1,6 @@
 """Boundary and regression tests for heating schedules."""
 import unittest
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 
@@ -53,9 +53,10 @@ class BoundaryTests(unittest.TestCase):
 
     def test_all_weekdays(self):
         days = list(module.WEEKDAYS)
-        for day in range(26, 33):
-            with self.subTest(day=day):
-                self.assertTrue(self.active(day, 9, 0, days, [("08:00:00", "10:00:00")]))
+        for offset in range(7):
+            with self.subTest(offset=offset):
+                now = datetime(2026, 10, 26, 9) + timedelta(days=offset)
+                self.assertTrue(module.is_in_schedule(now, days, [("08:00:00", "10:00:00")]))
 
 
 if __name__ == "__main__":
