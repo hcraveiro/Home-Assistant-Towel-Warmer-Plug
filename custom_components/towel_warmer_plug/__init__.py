@@ -18,10 +18,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    # Legacy options may contain null entity references. Do not overwrite
+    # valid setup values with null when loading an existing entry.
     data = {
         **entry.data,
-        **entry.options,
-        CONF_NAME: entry.title,  # garante que temos o título como nome interno
+        **{key: value for key, value in entry.options.items() if value is not None},
+        CONF_NAME: entry.title,
     }
 
     config = TowelWarmerConfig.from_dict(data)
