@@ -39,6 +39,14 @@ class MigrationTests(unittest.TestCase):
         self.assertEqual(merged["power_sensor"], "sensor.warmer_power")
         self.assertEqual(TowelWarmerConfig.from_dict(merged).time_windows, [("11:00:00", "12:00:00")])
 
+    def test_missing_power_sensor_requires_reconfiguration(self):
+        old = dict(self.old_data)
+        old.pop("power_sensor")
+        merged = merge_entry_settings(old, {"power_sensor": None})
+        self.assertNotIn("power_sensor", merged)
+        fixed = merge_entry_settings(merged, {"power_sensor": "sensor.fixed_power"})
+        self.assertEqual(TowelWarmerConfig.from_dict(fixed).power_sensor, "sensor.fixed_power")
+
     def test_valid_options_take_precedence(self):
         merged = merge_entry_settings(self.old_data, {"power_sensor": "sensor.new_power"})
         self.assertEqual(merged["power_sensor"], "sensor.new_power")
