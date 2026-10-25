@@ -15,6 +15,11 @@ from .const import (
 CONF_MANUAL_MAX_DURATION = "manual_max_duration"
 DEFAULT_MANUAL_MAX_DURATION = 60  # minutes
 
+def merge_entry_settings(data: dict[str, Any], options: dict[str, Any]) -> dict[str, Any]:
+    """Preserve original settings when legacy options contain null values."""
+    return {**data, **{key: value for key, value in options.items() if value is not None}}
+
+
 @dataclass
 class TowelWarmerConfig:
     name: str
