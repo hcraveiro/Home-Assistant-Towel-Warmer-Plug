@@ -9,7 +9,6 @@ from .const import (
     DEFAULT_START_TIME, DEFAULT_END_TIME,
     CONF_MINIMUM_POWER, DEFAULT_MINIMUM_POWER,
     CONF_WEEKDAYS, DEFAULT_WEEKDAYS, CONF_TIME_WINDOWS,
-    CONF_START_TIME_2, CONF_END_TIME_2, CONF_START_TIME_3, CONF_END_TIME_3,
 )
 
 CONF_MANUAL_MAX_DURATION = "manual_max_duration"
@@ -98,17 +97,25 @@ class TowelWarmerOptionsFlowHandler(config_entries.OptionsFlow):
         self._config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
-        if user_input is not None and valid_schedule(user_input):
+        if user_input is not None and valid_schedule(user_input) and user_input.get(CONF_POWER):
             return self.async_create_entry(title="", data=user_input)
 
         options = self.config_entry.options
         data_fallback = self.config_entry.data
-        schedule_values = {**data_fallback, **options, **(user_input or {})}
+        schedule_values = {**data_fallback, **{key: value for key, value in options.items() if value is not None}, **(user_input or {})}
 
         return self.async_show_form(
             step_id="init",
             errors={"base": "invalid_schedule"} if user_input is not None else {},
             data_schema=vol.Schema({
+                vol.Required(CONF_SWITCH, default=schedule_values[CONF_SWITCH]): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain=["switch", "climate"])
+                ),
+                **({vol.Required(CONF_POWER, default=schedule_values[CONF_POWER]): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="sensor")
+                )} if schedule_values.get(CONF_POWER) else {vol.Required(CONF_POWER): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="sensor")
+                )}),
                 vol.Optional(
                     CONF_MINIMUM_POWER,
                     default=options.get(CONF_MINIMUM_POWER, data_fallback.get(CONF_MINIMUM_POWER, DEFAULT_MINIMUM_POWER))
