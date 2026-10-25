@@ -26,10 +26,10 @@ For each towel warmer you want to control, you must add a configuration entry. D
 - The plug switch entity.
 - The power sensor entity (used to detect operation and malfunction).
 - The weekdays on which automatic operation is permitted (all seven by default).
-- A primary daily heating interval, plus up to two additional optional intervals.
+- Any number of daily heating intervals, added or removed using the schedule list editor.
 - The minimum power threshold used to detect malfunction (e.g. 2W).
 
-You can change the schedule or minimum power threshold later via the **Configure** button in the integration. Each towel warmer has its own weekdays and intervals. All intervals are checked independently; overnight intervals (e.g. 22:00–02:00) continue into the following day and belong to the day they start. Existing configurations retain their original primary interval and default to all seven days. Each optional interval requires both a start and an end time.
+You can change the schedule or minimum power threshold later via the **Configure** button in the integration. Each towel warmer has its own weekdays and intervals. All intervals are checked independently; overnight intervals (e.g. 22:00–02:00) continue into the following day and belong to the day they start. Existing configurations retain their original primary interval and default to all seven days. Each interval requires both a start and an end time.
 
 ## Entities
 
