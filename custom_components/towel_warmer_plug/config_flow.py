@@ -121,6 +121,7 @@ class TowelWarmerOptionsFlowHandler(config_entries.OptionsFlow):
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(min=1, max=360, step=1, unit_of_measurement="min", mode=selector.NumberSelectorMode.BOX)
                 ),
+                **schedule_fields(schedule_values),
             })
         )
         
