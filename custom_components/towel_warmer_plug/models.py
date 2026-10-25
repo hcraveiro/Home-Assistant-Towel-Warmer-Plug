@@ -10,6 +10,8 @@ from .const import (
     CONF_END_TIME,
     CONF_MINIMUM_POWER,
     DEFAULT_MINIMUM_POWER,
+    CONF_WEEKDAYS, DEFAULT_WEEKDAYS,
+    CONF_START_TIME_2, CONF_END_TIME_2, CONF_START_TIME_3, CONF_END_TIME_3,
 )
 
 CONF_MANUAL_MAX_DURATION = "manual_max_duration"
@@ -23,7 +25,9 @@ class TowelWarmerConfig:
     minimum_power: float
     start_time: time
     end_time: time
-    manual_max_duration: int  # em minutos
+    manual_max_duration: int  # minutes
+    weekdays: list[str]
+    time_windows: list[tuple[str, str]]
 
     @staticmethod
     def from_dict(data: dict[str, Any]) -> "TowelWarmerConfig":
@@ -35,5 +39,12 @@ class TowelWarmerConfig:
             start_time=data[CONF_START_TIME],
             end_time=data[CONF_END_TIME],
             manual_max_duration=data.get(CONF_MANUAL_MAX_DURATION, DEFAULT_MANUAL_MAX_DURATION),
+            weekdays=data.get(CONF_WEEKDAYS, DEFAULT_WEEKDAYS),
+            time_windows=[(data[CONF_START_TIME], data[CONF_END_TIME])] + [
+                (data[start], data[end]) for start, end in (
+                    (CONF_START_TIME_2, CONF_END_TIME_2),
+                    (CONF_START_TIME_3, CONF_END_TIME_3),
+                ) if data.get(start) and data.get(end)
+            ],
         )
 
