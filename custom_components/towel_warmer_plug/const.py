@@ -20,3 +20,5 @@ CONF_START_TIME_2 = "start_time_2"
 CONF_END_TIME_2 = "end_time_2"
 CONF_START_TIME_3 = "start_time_3"
 CONF_END_TIME_3 = "end_time_3"
+
+CONF_TIME_WINDOWS = "time_windows"
