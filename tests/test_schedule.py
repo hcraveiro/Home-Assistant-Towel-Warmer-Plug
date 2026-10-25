@@ -1,7 +1,14 @@
 """Regression tests for weekly and multi-window scheduling."""
 import unittest
 from datetime import datetime
-from custom_components.towel_warmer_plug.schedule import is_in_schedule
+from importlib.util import module_from_spec, spec_from_file_location
+from pathlib import Path
+
+schedule_path = Path(__file__).resolve().parents[1] / "custom_components" / "towel_warmer_plug" / "schedule.py"
+spec = spec_from_file_location("towel_schedule", schedule_path)
+schedule = module_from_spec(spec)
+spec.loader.exec_module(schedule)
+is_in_schedule = schedule.is_in_schedule
 
 
 class ScheduleTests(unittest.TestCase):
