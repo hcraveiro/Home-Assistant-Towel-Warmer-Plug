@@ -24,7 +24,7 @@
       "invalid_schedule": "Each additional time window must have both a start and an end time.",
       "invalid_control_entity": "Select a switch or climate entity.",
       "control_entity_unavailable": "Selected control entity is currently unavailable. Try again when it is online.",
-      "unsupported_hvac_modes": "Climate must support off and at least one of heat or auto."
+      "unsupported_hvac_modes": "Climate must support off and at least one of heat, auto, or on."
     }
   },
   "options": {
