@@ -34,6 +34,40 @@ class TowelWarmerCoordinator(DataUpdateCoordinator):
 
         hass.loop.create_task(self.load_persistent_data())
 
+    def _is_on(self, state):
+        """Determine whether the configured switch or climate is enabled."""
+        if self.config.switch_entity.startswith("climate."):
+            return state.state not in ("off", "unknown", "unavailable")
+        return state.state == "on"
+
+    async def _set_enabled(self, enabled):
+        """Control either a switch or a climate entity using its native service."""
+        entity_id = self.config.switch_entity
+        state = self.hass.states.get(entity_id)
+        if state is None or state.state in ("unknown", "unavailable"):
+            raise UpdateFailed(f"Control entity {entity_id} is not available")
+        if entity_id.startswith("climate."):
+            modes = state.attributes.get("hvac_modes", [])
+            if enabled:
+                mode = next((candidate for candidate in ("heat", "auto") if candidate in modes), None)
+                if mode is None:
+                    raise UpdateFailed(f"{entity_id} supports neither heat nor auto: {modes}")
+            else:
+                if "off" not in modes:
+                    raise UpdateFailed(f"{entity_id} does not support off mode: {modes}")
+                mode = "off"
+            _LOGGER.info("%s - Setting %s HVAC mode to %s", self.config.name, entity_id, mode)
+            await self.hass.services.async_call(
+                "climate", "set_hvac_mode",
+                {"entity_id": entity_id, "hvac_mode": mode},
+                blocking=True,
+            )
+        else:
+            await self.hass.services.async_call(
+                "switch", "turn_on" if enabled else "turn_off",
+                {"entity_id": entity_id}, blocking=True,
+            )
+
     async def _async_update_data(self):
         try:
             state_switch = self.hass.states.get(self.config.switch_entity)
@@ -50,7 +84,9 @@ class TowelWarmerCoordinator(DataUpdateCoordinator):
             auto_enabled = state_auto and state_auto.state == "on"
             _LOGGER.debug(f"{self.config.name} - Found auto switch entity: {auto_switch_id} with state: {state_auto.state if state_auto else 'Not found'}")
 
-            is_on = state_switch.state == "on"
+            if state_switch.state in ("unknown", "unavailable"):
+                raise UpdateFailed("Control entity is unavailable")
+            is_on = self._is_on(state_switch)
             power = float(state_power.state)
 
             inside_schedule = is_in_schedule(
@@ -62,12 +98,12 @@ class TowelWarmerCoordinator(DataUpdateCoordinator):
             self._last_switch_state = state_switch.state
 
             if previous_state is not None and previous_state != state_switch.state:
-                if state_switch.state == "on" and not self._auto_turning_on:
+                if is_on and not self._auto_turning_on:
                     self._manual_override = True
                     self._manual_override_since = dt_util.now()
                     _LOGGER.debug(f"{self.config.name} - Manual override detected: switch turned on manually.")
                     await self.save_persistent_data()
-                elif state_switch.state == "off":
+                elif not is_on:
                     self._manual_override = False
                     self._manual_override_since = None
                     _LOGGER.debug(f"{self.config.name} - Switch turned off. Clearing manual override.")
@@ -81,7 +117,7 @@ class TowelWarmerCoordinator(DataUpdateCoordinator):
                 elapsed = dt_util.now() - self._manual_override_since
                 if elapsed.total_seconds() > self.config.manual_max_duration * 60:
                     _LOGGER.info(f"{self.config.name} - Manual override exceeded {self.config.manual_max_duration} minutes. Turning off.")
-                    await self.hass.services.async_call("switch", "turn_off", {"entity_id": self.config.switch_entity}, blocking=True)
+                    await self._set_enabled(False)
                     self._manual_override = False
                     self._manual_override_since = None
                     await self.save_persistent_data()
@@ -117,14 +153,14 @@ class TowelWarmerCoordinator(DataUpdateCoordinator):
                 if inside_schedule and not is_on:
                     _LOGGER.info(f"{self.config.name} - Inside schedule. Turning on towel warmer...")
                     self._auto_turning_on = True
-                    await self.hass.services.async_call("switch", "turn_on", {"entity_id": self.config.switch_entity}, blocking=True)
+                    await self._set_enabled(True)
                     self._last_auto_on = dt_util.now()
                     self._manual_override = False
                     self._manual_override_since = None
                     await self.save_persistent_data()
                 elif not inside_schedule and is_on and not self._manual_override:
                     _LOGGER.info(f"{self.config.name} - Outside schedule. Turning off towel warmer...")
-                    await self.hass.services.async_call("switch", "turn_off", {"entity_id": self.config.switch_entity}, blocking=True)
+                    await self._set_enabled(False)
                     self._manual_override = False
                     self._manual_override_since = None
                     await self.save_persistent_data()
