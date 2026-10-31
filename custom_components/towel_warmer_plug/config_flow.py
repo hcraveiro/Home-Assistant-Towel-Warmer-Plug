@@ -48,7 +48,7 @@ def schedule_fields(values):
 
 
 def validate_control_entity(hass, entity_id):
-    """Validate control capability and select heat before auto for climates."""
+    """Validate control capability and prefer heat, then auto, then on."""
     if not entity_id or "." not in entity_id:
         return "invalid_control_entity"
     domain = entity_id.split(".", 1)[0]
@@ -59,7 +59,7 @@ def validate_control_entity(hass, entity_id):
         return "control_entity_unavailable"
     if domain == "climate":
         modes = state.attributes.get("hvac_modes", [])
-        if "off" not in modes or not any(mode in modes for mode in ("heat", "auto")):
+        if "off" not in modes or not any(mode in modes for mode in ("heat", "auto", "on")):
             return "unsupported_hvac_modes"
     return None
 
