@@ -49,9 +49,9 @@ class TowelWarmerCoordinator(DataUpdateCoordinator):
         if entity_id.startswith("climate."):
             modes = state.attributes.get("hvac_modes", [])
             if enabled:
-                mode = next((candidate for candidate in ("heat", "auto") if candidate in modes), None)
+                mode = next((candidate for candidate in ("heat", "auto", "on") if candidate in modes), None)
                 if mode is None:
-                    raise UpdateFailed(f"{entity_id} supports neither heat nor auto: {modes}")
+                    raise UpdateFailed(f"{entity_id} supports none of heat, auto, or on: {modes}")
             else:
                 if "off" not in modes:
                     raise UpdateFailed(f"{entity_id} does not support off mode: {modes}")
