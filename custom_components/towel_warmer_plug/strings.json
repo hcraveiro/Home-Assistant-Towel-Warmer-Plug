@@ -7,7 +7,7 @@
         "description": "Set up the plug and power sensor",
         "data": {
           "name": "Name",
-          "switch_entity": "Plug Switch",
+          "switch_entity": "Control entity (switch or climate)",
           "power_sensor": "Power Sensor",
           "minimum_power": "Minimum Power (W)",
           "manual_max_duration": "Max Duration in Manual Mode (min)",
@@ -21,7 +21,10 @@
       }
     },
     "errors": {
-      "invalid_schedule": "Each additional time window must have both a start and an end time."
+      "invalid_schedule": "Each additional time window must have both a start and an end time.",
+      "invalid_control_entity": "Select a switch or climate entity.",
+      "control_entity_unavailable": "Selected control entity is currently unavailable. Try again when it is online.",
+      "unsupported_hvac_modes": "Climate must support off and at least one of heat, auto, or on."
     }
   },
   "options": {
@@ -32,7 +35,8 @@
           "minimum_power": "Minimum Power (W)",
           "manual_max_duration": "Max Duration in Manual Mode (min)",
           "weekdays": "Days of the week",
-          "time_windows": "Heating intervals"
+          "time_windows": "Heating intervals",
+          "switch_entity": "Control entity (switch or climate)"
         },
         "data_description": {
           "weekdays": "Choose the days when automatic heating is allowed. Optional time windows require both start and end.",
@@ -41,7 +45,10 @@
       }
     },
     "errors": {
-      "invalid_schedule": "Each additional time window must have both a start and an end time."
+      "invalid_schedule": "Each additional time window must have both a start and an end time.",
+      "invalid_control_entity": "Select a switch or climate entity.",
+      "control_entity_unavailable": "Selected control entity is currently unavailable. Try again when it is online.",
+      "unsupported_hvac_modes": "Climate must support off and at least one of heat or auto."
     }
   }
 }
