@@ -47,6 +47,23 @@ def schedule_fields(values):
     }
 
 
+def validate_control_entity(hass, entity_id):
+    """Validate control capability and select heat before auto for climates."""
+    if not entity_id or "." not in entity_id:
+        return "invalid_control_entity"
+    domain = entity_id.split(".", 1)[0]
+    if domain not in ("switch", "climate"):
+        return "invalid_control_entity"
+    state = hass.states.get(entity_id)
+    if state is None or state.state in ("unknown", "unavailable"):
+        return "control_entity_unavailable"
+    if domain == "climate":
+        modes = state.attributes.get("hvac_modes", [])
+        if "off" not in modes or not any(mode in modes for mode in ("heat", "auto")):
+            return "unsupported_hvac_modes"
+    return None
+
+
 def valid_schedule(data):
     """At least one complete interval is required."""
     windows = data.get(CONF_TIME_WINDOWS, [])
@@ -65,7 +82,8 @@ class TowelWarmerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return TowelWarmerOptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
-        if user_input is not None and valid_schedule(user_input):
+        control_error = validate_control_entity(self.hass, user_input.get(CONF_SWITCH)) if user_input else None
+        if user_input is not None and valid_schedule(user_input) and not control_error:
             return self.async_create_entry(
                 title=user_input[CONF_NAME],
                 data=user_input
@@ -73,11 +91,11 @@ class TowelWarmerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            errors={"base": "invalid_schedule"} if user_input is not None else {},
+            errors=({"base": control_error or "invalid_schedule"} if user_input is not None else {}),
             data_schema=vol.Schema({
                 vol.Required(CONF_NAME): selector.TextSelector(),
                 vol.Required(CONF_SWITCH): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="switch")
+                    selector.EntitySelectorConfig(domain=["switch", "climate"])
                 ),
                 vol.Required(CONF_POWER): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="sensor")
@@ -97,7 +115,8 @@ class TowelWarmerOptionsFlowHandler(config_entries.OptionsFlow):
         self._config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
-        if user_input is not None and valid_schedule(user_input) and user_input.get(CONF_POWER):
+        control_error = validate_control_entity(self.hass, user_input.get(CONF_SWITCH)) if user_input else None
+        if user_input is not None and valid_schedule(user_input) and user_input.get(CONF_POWER) and not control_error:
             return self.async_create_entry(title="", data=user_input)
 
         options = self.config_entry.options
@@ -106,7 +125,7 @@ class TowelWarmerOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            errors={"base": "invalid_schedule"} if user_input is not None else {},
+            errors=({"base": control_error or "invalid_schedule"} if user_input is not None else {}),
             data_schema=vol.Schema({
                 vol.Required(CONF_SWITCH, default=schedule_values[CONF_SWITCH]): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=["switch", "climate"])
